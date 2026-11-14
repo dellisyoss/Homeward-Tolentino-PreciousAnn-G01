@@ -4,7 +4,7 @@ Homeward: Lost Pet Alert & Street Sighting Tracker. Full-stack Django project
 for IM2 Project Development 1, adapted from the `campusconnect reference` beside
 this project, with simple Bootstrap templates and Supabase PostgreSQL.
 
-## Increment 3: login, logout, and role dashboards
+## Increment 4: profiles and custom user management
 
 Implemented: project setup and public registration with a unique email, required
 full name, optional contact number, and matching validated passwords. Django
@@ -18,14 +18,28 @@ and timezone-aware timestamps, and adds its standard authentication fields.
 Email uniqueness is also enforced case-insensitively in PostgreSQL; a database
 check restricts roles to `MEMBER` and `ADMIN`.
 
-Implemented in this increment: case-insensitive email login, session logout,
+Previously implemented: case-insensitive email login, session logout,
 Member and Administrator dashboards, and server-side role checks. Every login
 goes to the user's own dashboard. Logged-out users are redirected to login;
 authenticated users requesting the other role's dashboard receive HTTP 403.
 Logout is a CSRF-protected POST action. Navbar links match the user's role.
 
-Profile editing, custom user administration, and deployment are still upcoming.
-This is not the completed submission.
+Implemented in this increment: own-profile viewing and editing, plus a custom
+administrator user-management panel. Profiles can update name, email, and contact
+number, while roles and authentication flags are excluded from profile forms.
+The panel lists/searches accounts, creates Members or Administrators with hashed
+passwords, and edits details, role, and active status. Deactivation preserves
+records and prevents login and access to protected pages. Reactivation restores
+access. There is no hard-delete action.
+
+Administrators edit their own details through My profile, so they cannot disable
+or demote themselves in the panel. Accounts created with `createsuperuser` are
+protected from panel edits; their owners can still update their own profiles.
+Panel-created administrators use the Homeward `ADMIN` role, with no Django
+superuser or staff privileges. The built-in Django admin remains disabled.
+
+Deployment and final production checks are still upcoming. This is not the
+completed submission.
 
 Use Python 3.15 with Django 6.1.3, matching the reference environment.
 From this folder in PowerShell:
@@ -104,7 +118,31 @@ redirects to login with a success message.
 Try missing required fields, invalid email, mismatched/weak passwords, and
 registering the same email again with different capitalization.
 
-## Verify increment 3
+## Verify profiles and user management
+
+No new packages or database migrations are needed for increment 4.
+
+1. Log in as a Member and open **My profile** at `/accounts/profile/`.
+2. Choose **Edit profile**, change your name/contact number, and save.
+3. Change your email and verify that you remain logged in. After logout, use
+   the new email to log in. Another account's email must be rejected, including
+   different capitalization of it.
+4. Open `/accounts/manage/users/` as a Member; access must be denied.
+5. Log in as an Administrator and choose **Manage users**. Search by email/name,
+   create a test Member, and edit its details. Passwords are set on creation;
+   editing user details leaves the existing password unchanged.
+6. Clear **Active account** on the test user and save. That user must be unable
+   to log in or use an existing session to open protected pages. Re-enable it to
+   restore access. The user row is kept throughout.
+7. The panel also supports creating/promoting another Administrator. The current
+   administrator's own row links to My profile, and protected administrator
+   accounts have no panel edit link. Forged requests to edit them return 403.
+
+Profile URLs never take a user ID; they always refer to the logged-in user.
+Management URLs take a user ID but are restricted to the Administrator role.
+All save forms require CSRF tokens, and GET requests do not change account data.
+
+## Verify login and dashboards
 
 No new packages or database migrations are needed if increment 2's migrations
 have already been applied.
@@ -147,16 +185,16 @@ script for Supabase instead of plain `manage.py test`.
 ## GitHub workflow
 
 Repository: `https://github.com/dellisyoss/Homeward-Tolentino-PreciousAnn-G01`.
-Keep it public. The initial setup and email-registration PRs are on `main`.
-Increment 3 belongs on `feature/login-dashboards`, as the original instructions
+Keep it public. The setup, registration, and login/dashboard PRs are on `main`.
+Increment 4 belongs on `feature/profiles-user-management`, as the original instructions
 require subsequent updates through branches and pull requests.
 
 ```powershell
 git status
-git add accounts/forms.py accounts/views.py accounts/urls.py accounts/tests.py homeward/settings.py homeward/urls.py templates/base.html templates/home.html templates/registration/signup.html templates/registration/login.html templates/dashboard templates/403.html README.md
+git add accounts/forms.py accounts/views.py accounts/urls.py accounts/tests.py templates/base.html templates/dashboard templates/accounts templates/includes scripts/test_accounts.py README.md
 git diff --cached --stat
-git commit -m "Add email login, logout, and protected role dashboards"
-git push -u origin feature/login-dashboards
+git commit -m "Add own profiles and custom administrator user management"
+git push -u origin feature/profiles-user-management
 ```
 
 Review the staged files before committing. `.env`, `.venv/`, `venv/`, and
@@ -175,8 +213,7 @@ must be merged into `main`.
 
 ## Remaining increments
 
-1. Own-profile viewing/editing and a custom administrator user management panel.
-2. Remaining account/permission tests, production settings, and Render deployment.
+1. Final account/permission checks, production settings, and Render deployment.
 
 Each increment should be reviewed and committed before starting the next.
 Public registration creates Members only. The SDD's reference to an "admin site"

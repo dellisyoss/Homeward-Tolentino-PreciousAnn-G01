@@ -15,10 +15,11 @@
                     {% if user.role == "ADMIN" %}
                         <a href="{% url 'admin_dashboard' %}">Admin dashboard</a>
                         <a href="{% url 'admin_dashboard' %}#account-summary">Account summary</a>
+                        <a href="{% url 'user_list' %}">Manage users</a>
                     {% elif user.role == "MEMBER" %}
                         <a href="{% url 'member_dashboard' %}">Member dashboard</a>
-                        <a href="{% url 'member_dashboard' %}#member-account">My account</a>
                     {% endif %}
+                    <a href="{% url 'profile' %}">My profile</a>
                     <form method="post" action="{% url 'logout' %}" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
