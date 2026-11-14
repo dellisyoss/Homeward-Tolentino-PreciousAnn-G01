@@ -302,3 +302,269 @@ class LoginDashboardTests(TestCase):
         client.force_login(self.member)
         self.assertEqual(client.post(reverse("logout")).status_code, 403)
         self.assertIn("_auth_user_id", client.session)
+
+
+class ProfileTests(TestCase):
+    password = "River-Trail!8427"
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = User.objects.create_user("member@example.com", cls.password, full_name="Alex Member")
+        cls.admin = User.objects.create_superuser("admin@example.com", cls.password, full_name="Sam Administrator")
+
+    def setUp(self):
+        self.client.force_login(self.member)
+
+    def data(self, **changes):
+        data = {"email": self.member.email, "full_name": "Updated Member", "contact_number": "09123456789"}
+        data.update(changes)
+        return data
+
+    def test_profile_shows_only_current_user_even_with_another_id(self):
+        response = self.client.get(reverse("profile"), {"pk": self.admin.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.member.email)
+        self.assertNotContains(response, self.admin.email)
+        self.assertNotContains(response, self.member.password)
+        self.assertEqual(self.client.get(f"/accounts/profile/{self.admin.pk}/").status_code, 404)
+
+    def test_profile_update_changes_own_details_and_keeps_session(self):
+        old_password = self.member.password
+        response = self.client.post(reverse("profile_edit"), self.data(email=" NEW@Example.com "), follow=True)
+        self.assertRedirects(response, reverse("profile"))
+        self.assertContains(response, "Your profile was updated successfully.")
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.email, "new@example.com")
+        self.assertEqual(self.member.full_name, "Updated Member")
+        self.assertEqual(self.member.contact_number, "09123456789")
+        self.assertEqual(self.member.password, old_password)
+        self.assertIn("_auth_user_id", self.client.session)
+        self.assertEqual(authenticate(email="new@example.com", password=self.password), self.member)
+        self.assertIsNone(authenticate(email="member@example.com", password=self.password))
+
+    def test_profile_ignores_other_user_ids_and_privilege_fields(self):
+        response = self.client.post(
+            reverse("profile_edit") + f"?pk={self.admin.pk}",
+            self.data(pk=self.admin.pk, id=self.admin.pk, role="ADMIN", is_staff="on", is_superuser="on", is_active="", password="plaintext"),
+        )
+        self.assertRedirects(response, reverse("profile"))
+        self.member.refresh_from_db()
+        self.admin.refresh_from_db()
+        self.assertEqual(self.member.role, User.Role.MEMBER)
+        self.assertFalse(self.member.is_staff)
+        self.assertFalse(self.member.is_superuser)
+        self.assertTrue(self.member.is_active)
+        self.assertTrue(self.member.check_password(self.password))
+        self.assertEqual(self.admin.full_name, "Sam Administrator")
+
+    def test_profile_edit_form_does_not_expose_privilege_or_password_fields(self):
+        response = self.client.get(reverse("profile_edit"))
+        for name in ("role", "is_staff", "is_superuser", "is_active", "password"):
+            self.assertNotIn(name, response.context["form"].fields)
+
+    def test_existing_email_can_be_kept(self):
+        response = self.client.post(reverse("profile_edit"), self.data(email="MEMBER@example.com"))
+        self.assertRedirects(response, reverse("profile"))
+
+    def test_another_users_email_is_rejected_case_insensitively(self):
+        response = self.client.post(reverse("profile_edit"), self.data(email="ADMIN@EXAMPLE.COM"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "An account with this email already exists.")
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.email, "member@example.com")
+        self.assertEqual(self.member.full_name, "Alex Member")
+
+    def test_invalid_profile_fields_do_not_save(self):
+        for changes in ({"email": "bad-email"}, {"full_name": " "}, {"contact_number": "1" * 21}):
+            with self.subTest(changes=changes):
+                response = self.client.post(reverse("profile_edit"), self.data(**changes))
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["form"].errors)
+                self.member.refresh_from_db()
+                self.assertEqual(self.member.full_name, "Alex Member")
+
+    def test_profile_contact_number_is_optional(self):
+        self.assertRedirects(
+            self.client.post(reverse("profile_edit"), self.data(contact_number="")), reverse("profile")
+        )
+
+    def test_admin_can_edit_own_profile_without_changing_privileges(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("profile_edit"), self.data(email=self.admin.email, full_name="Updated Admin"))
+        self.assertRedirects(response, reverse("profile"))
+        self.admin.refresh_from_db()
+        self.assertEqual(self.admin.full_name, "Updated Admin")
+        self.assertEqual(self.admin.role, User.Role.ADMIN)
+        self.assertTrue(self.admin.is_superuser)
+
+    def test_anonymous_profile_access_requires_login(self):
+        self.client.logout()
+        for name in ("profile", "profile_edit"):
+            with self.subTest(name=name):
+                self.assertRedirects(
+                    self.client.get(reverse(name)), reverse("login") + "?next=" + reverse(name)
+                )
+
+    def test_profile_update_requires_csrf(self):
+        from django.test import Client
+
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
+        self.assertEqual(client.post(reverse("profile_edit"), self.data()).status_code, 403)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.full_name, "Alex Member")
+
+
+class UserManagementTests(TestCase):
+    password = "River-Trail!8427"
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user("admin@example.com", cls.password, full_name="Panel Admin", role=User.Role.ADMIN)
+        cls.member = User.objects.create_user("member@example.com", cls.password, full_name="Alex Member")
+        cls.protected = User.objects.create_superuser("protected@example.com", cls.password, full_name="Protected Admin")
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def data(self, **changes):
+        data = {"email": "new@example.com", "full_name": "New Member", "contact_number": "", "role": "MEMBER", "is_active": "on", "password1": self.password, "password2": self.password}
+        data.update(changes)
+        return data
+
+    def edit_url(self, user=None):
+        return reverse("user_edit", args=[(user or self.member).pk])
+
+    def test_custom_panel_lists_accounts_without_hashes(self):
+        response = self.client.get(reverse("user_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.member.email)
+        self.assertContains(response, "Protected administrator")
+        self.assertNotContains(response, self.member.password)
+        self.assertEqual(self.client.get("/admin/").status_code, 404)
+
+    def test_panel_access_uses_role_instead_of_django_staff_flag(self):
+        self.assertFalse(self.admin.is_staff)
+        self.assertEqual(self.client.get(reverse("user_list")).status_code, 200)
+        self.member.is_staff = True
+        self.member.is_superuser = True
+        self.member.save()
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(reverse("user_list")).status_code, 403)
+
+    def test_search_and_pagination(self):
+        response = self.client.get(reverse("user_list"), {"q": "ALEX"})
+        self.assertContains(response, self.member.email)
+        self.assertNotContains(response, self.protected.email)
+        User.objects.bulk_create([User(email=f"extra{i}@example.com", full_name=f"Extra {i}") for i in range(12)])
+        response = self.client.get(reverse("user_list"), {"q": "extra", "page": 2})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["accounts"]), 2)
+        self.assertContains(response, "q=extra")
+
+    def test_admin_can_create_member_or_admin_with_hashed_password(self):
+        for role in ("MEMBER", "ADMIN"):
+            with self.subTest(role=role):
+                email = f"new-{role.lower()}@example.com"
+                response = self.client.post(reverse("user_create"), self.data(email=email, role=role), follow=True)
+                self.assertRedirects(response, reverse("user_list"))
+                self.assertContains(response, "The user account was created successfully.")
+                user = User.objects.get(email=email)
+                self.assertTrue(user.check_password(self.password))
+                self.assertEqual(user.role, role)
+                self.assertFalse(user.is_superuser)
+
+    def test_create_ignores_django_privilege_flags(self):
+        self.client.post(reverse("user_create"), self.data(is_staff="on", is_superuser="on"))
+        user = User.objects.get(email="new@example.com")
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_create_validates_duplicate_email_role_and_passwords(self):
+        for changes in ({"email": "MEMBER@EXAMPLE.COM"}, {"role": "OWNER"}, {"password2": "mismatch"}, {"password1": "123", "password2": "123"}):
+            with self.subTest(changes=changes):
+                response = self.client.post(reverse("user_create"), self.data(**changes))
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["form"].errors)
+                self.assertEqual(User.objects.count(), 3)
+
+    def test_admin_can_update_details_and_role_without_changing_password(self):
+        old_hash = self.member.password
+        response = self.client.post(self.edit_url(), self.data(email=self.member.email, role="ADMIN", password="injected"), follow=True)
+        self.assertRedirects(response, reverse("user_list"))
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.role, User.Role.ADMIN)
+        self.assertEqual(self.member.full_name, "New Member")
+        self.assertEqual(self.member.password, old_hash)
+
+    def test_edit_rejects_duplicate_email_and_invalid_role(self):
+        for changes in ({"email": "ADMIN@EXAMPLE.COM"}, {"role": "OWNER"}):
+            with self.subTest(changes=changes):
+                response = self.client.post(self.edit_url(), self.data(**changes))
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["form"].errors)
+                self.member.refresh_from_db()
+                self.assertEqual(self.member.email, "member@example.com")
+                self.assertEqual(self.member.role, "MEMBER")
+
+    def test_deactivation_blocks_login_and_existing_session_and_can_be_reversed(self):
+        from django.test import Client
+
+        member_client = Client()
+        member_client.force_login(self.member)
+        response = self.client.post(self.edit_url(), self.data(email=self.member.email, is_active=""))
+        self.assertRedirects(response, reverse("user_list"))
+        self.member.refresh_from_db()
+        self.assertFalse(self.member.is_active)
+        self.assertIsNone(authenticate(email=self.member.email, password=self.password))
+        self.assertRedirects(member_client.get(reverse("profile")), reverse("login") + "?next=" + reverse("profile"))
+        self.client.post(self.edit_url(), self.data(email=self.member.email))
+        self.member.refresh_from_db()
+        self.assertTrue(self.member.is_active)
+        self.assertEqual(authenticate(email=self.member.email, password=self.password), self.member)
+
+    def test_self_deactivation_or_demotion_and_protected_account_edits_are_denied(self):
+        for target in (self.admin, self.protected):
+            with self.subTest(target=target.email):
+                self.assertEqual(self.client.get(self.edit_url(target)).status_code, 403)
+                self.assertEqual(self.client.post(self.edit_url(target), self.data(role="MEMBER", is_active="")).status_code, 403)
+                target.refresh_from_db()
+                self.assertTrue(target.is_active)
+                self.assertEqual(target.role, "ADMIN")
+
+    def test_unknown_user_returns_404(self):
+        self.assertEqual(self.client.get(reverse("user_edit", args=[999999])).status_code, 404)
+
+    def test_members_cannot_use_any_management_endpoint(self):
+        self.client.force_login(self.member)
+        for url in (reverse("user_list"), reverse("user_create"), self.edit_url(self.admin)):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 403)
+                self.assertEqual(self.client.post(url, self.data()).status_code, 403)
+        self.assertEqual(User.objects.count(), 3)
+
+    def test_anonymous_users_are_redirected_from_management(self):
+        self.client.logout()
+        for url in (reverse("user_list"), reverse("user_create"), self.edit_url()):
+            with self.subTest(url=url):
+                self.assertRedirects(self.client.get(url), reverse("login") + "?next=" + url)
+
+    def test_management_posts_require_csrf(self):
+        from django.test import Client
+
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.admin)
+        for url in (reverse("user_create"), self.edit_url()):
+            with self.subTest(url=url):
+                self.assertEqual(client.post(url, self.data()).status_code, 403)
+        self.assertEqual(User.objects.count(), 3)
+
+    def test_edit_template_keeps_logged_in_admin_separate_from_target_user(self):
+        response = self.client.get(self.edit_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["user"], self.admin)
+        self.assertEqual(response.context["managed_user"], self.member)
+        self.assertContains(response, "Manage users")
+        response = self.client.post(self.edit_url(), self.data(email="invalid"))
+        self.assertEqual(response.context["user"], self.admin)
+        self.assertContains(response, "Manage users")

@@ -49,7 +49,8 @@ def main():
                 cursor.execute("SELECT current_schema()")
                 if cursor.fetchone()[0] != schema:
                     raise RuntimeError("Test schema isolation failed; stopped.")
-            failures = DiscoverRunner(verbosity=2, interactive=False, keepdb=True).run_tests(["accounts"])
+            labels = sys.argv[1:] or ["accounts"]
+            failures = DiscoverRunner(verbosity=2, interactive=False, keepdb=True).run_tests(labels)
         finally:
             connections.close_all()
             maintenance.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
