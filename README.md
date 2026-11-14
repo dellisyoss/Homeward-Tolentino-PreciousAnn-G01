@@ -1,15 +1,25 @@
 # Homeward
 
-Full-stack Django project for IM2 Project Development 1. Adapted from the
-`campusconnect reference` beside this project, with simple Bootstrap templates.
-The database is Supabase PostgreSQL. Authentication will use Django, with email
-as the login identifier and a custom user management panel.
+Homeward: Lost Pet Alert & Street Sighting Tracker. Full-stack Django project
+for IM2 Project Development 1, adapted from the `campusconnect reference` beside
+this project, with simple Bootstrap templates and Supabase PostgreSQL.
 
-## Increment 1: project setup
+## Increment 2: email accounts and registration
 
-This increment contains the Django scaffold, a basic home page, PostgreSQL
-configuration, and Git exclusions. Account features and deployment are upcoming;
-this increment is not the completed submission.
+Implemented: project setup and public registration with a unique email, required
+full name, optional contact number, and matching validated passwords. Django
+hashes passwords. Accounts default to Member; registration cannot assign admin
+permissions. Owners and community participants share the Member role.
+
+The custom `accounts.User` model maps to the SDD's `users` table. Its Python
+`password` field stores Django's encoded hash in `password_hash`, and
+`date_joined` maps to `created_at`. Django uses a bigint identity for `user_id`
+and timezone-aware timestamps, and adds its standard authentication fields.
+Email uniqueness is also enforced case-insensitively in PostgreSQL; a database
+check restricts roles to `MEMBER` and `ADMIN`.
+
+Login/logout, protected dashboards, profile editing, custom user administration,
+and deployment are still upcoming. This is not the completed submission.
 
 Use Python 3.15 with Django 6.1.3, matching the reference environment.
 From this folder in PowerShell:
@@ -17,7 +27,7 @@ From this folder in PowerShell:
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 If `py` or `python` opens the Microsoft Store, use the installed interpreter:
@@ -64,49 +74,61 @@ To check the real connection without creating tables:
 .\.venv\Scripts\python.exe manage.py shell -c "from django.db import connection; connection.ensure_connection(); print('PostgreSQL connection OK')"
 ```
 
-**Do not run `migrate` or `createsuperuser` yet.** Increment 2 will introduce the
-email-based custom user model before the first database migration, avoiding
-creation of Django's default username-based user tables.
+The custom user model is now configured before the first migration. Create the
+tables using the committed Django migrations (not the Supabase SQL editor):
 
-For this scaffold's public home page, run:
+```powershell
+.\.venv\Scripts\python.exe manage.py migrate --plan
+.\.venv\Scripts\python.exe manage.py migrate
+```
+
+The migrations enable Row Level Security on the Django account, permission,
+session, and migration tables. No policies grant Supabase API users access to
+these private records. Django connects as the server-side database role, which
+can manage them. Keep the Data API disabled for this Django-only project.
+
+Start the development server:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/. Until increment 2, `runserver` may warn about
-unapplied migrations; do not apply them yet.
+Open http://127.0.0.1:8000/accounts/signup/ to register. Successful registration
+returns to the home page with a success message. Login is a later increment.
+Try missing required fields, invalid email, mismatched/weak passwords, and
+registering the same email again with different capitalization.
+
+## Verify increment 2
+
+```powershell
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe scripts/test_accounts.py
+```
+
+The test script creates a uniquely named temporary schema in your PostgreSQL
+database, runs Django's account tests there, and removes that schema in a
+`finally` block. It does not create test users in your application's tables or
+need permission to create a separate database. The schema name is printed so it
+can be identified if the process is forcibly stopped before cleanup. Use this
+script for Supabase instead of plain `manage.py test`.
 
 ## GitHub workflow
 
-Create an empty **public** GitHub repository named
-`Homeward-Lastname-Firstname-Section`, replacing the placeholders with your
-required details. Do not initialize it with a README or license on GitHub.
-The local repository should start on `main`:
+Repository: `https://github.com/dellisyoss/Homeward-Tolentino-PreciousAnn-G01`.
+Keep it public. The initial commit and setup PR are already on `main`.
+Increment 2 belongs on `feature/email-accounts`, as the original instructions
+require subsequent updates through branches and pull requests.
 
 ```powershell
-# Only run init if this folder is not already a Git repository.
-git init -b main
 git status
-git add .
+git add accounts homeward/settings.py homeward/urls.py templates/base.html templates/registration/signup.html scripts/test_accounts.py README.md
 git diff --cached --stat
-git commit -m "Initialize Homeward Django project with Supabase configuration"
-git remote add origin https://github.com/YOUR_USERNAME/Homeward-Lastname-Firstname-Section.git
-git push -u origin main
+git commit -m "Add email-based user model and registration"
+git push -u origin feature/email-accounts
 ```
 
 Review the staged files before committing. `.env`, `.venv/`, `venv/`, and
 `__pycache__/` must not be included.
-
-For the next increment, create a feature branch before making changes:
-
-```powershell
-git switch -c feature/email-accounts
-# Make and review the next increment, then commit and push it.
-git add .
-git commit -m "Add email-based user model and registration"
-git push -u origin feature/email-accounts
-```
 
 Open a pull request into `main`, review and merge it on GitHub, then:
 
@@ -121,14 +143,15 @@ must be merged into `main`.
 
 ## Remaining increments
 
-1. Email-based custom user model, roles, registration, and initial migrations.
-2. Login/logout, protected role dashboards, and permission checks.
-3. Own-profile viewing/editing and a custom administrator user management panel.
-4. Account and permission tests, production settings, and Render deployment.
+1. Login/logout, protected Member/Admin dashboards, and permission checks.
+2. Own-profile viewing/editing and a custom administrator user management panel.
+3. Remaining account/permission tests, production settings, and Render deployment.
 
 Each increment should be reviewed and committed before starting the next.
-Confirm Homeward's purpose and role names before increment 2. Public registration
-will only create the ordinary role; users must not assign themselves admin access.
+Public registration creates Members only. The SDD's reference to an "admin site"
+will be implemented as custom Django templates and views, because the assignment
+prohibits the built-in Django admin. Pet cases, sightings, zones, and reports
+remain outside this account phase; a shelter directory is excluded by the SDD.
 
 ## Deployment target
 
