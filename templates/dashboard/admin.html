@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator dashboard | Homeward{% endblock %}
+
+{% block content %}
+<h1 class="h3">Administrator dashboard</h1>
+<p>Welcome, {{ user.full_name }}.</p>
+<section id="account-summary" class="card card-body">
+    <h2 class="h5">Account summary</h2>
+    <dl class="mb-0">
+        <dt>Total accounts</dt><dd>{{ user_count }}</dd>
+        <dt>Members</dt><dd>{{ member_count }}</dd>
+        <dt>Administrators</dt><dd>{{ admin_count }}</dd>
+    </dl>
+</section>
+{% endblock %}

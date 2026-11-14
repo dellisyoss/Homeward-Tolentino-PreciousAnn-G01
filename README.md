@@ -4,7 +4,7 @@ Homeward: Lost Pet Alert & Street Sighting Tracker. Full-stack Django project
 for IM2 Project Development 1, adapted from the `campusconnect reference` beside
 this project, with simple Bootstrap templates and Supabase PostgreSQL.
 
-## Increment 2: email accounts and registration
+## Increment 3: login, logout, and role dashboards
 
 Implemented: project setup and public registration with a unique email, required
 full name, optional contact number, and matching validated passwords. Django
@@ -18,8 +18,14 @@ and timezone-aware timestamps, and adds its standard authentication fields.
 Email uniqueness is also enforced case-insensitively in PostgreSQL; a database
 check restricts roles to `MEMBER` and `ADMIN`.
 
-Login/logout, protected dashboards, profile editing, custom user administration,
-and deployment are still upcoming. This is not the completed submission.
+Implemented in this increment: case-insensitive email login, session logout,
+Member and Administrator dashboards, and server-side role checks. Every login
+goes to the user's own dashboard. Logged-out users are redirected to login;
+authenticated users requesting the other role's dashboard receive HTTP 403.
+Logout is a CSRF-protected POST action. Navbar links match the user's role.
+
+Profile editing, custom user administration, and deployment are still upcoming.
+This is not the completed submission.
 
 Use Python 3.15 with Django 6.1.3, matching the reference environment.
 From this folder in PowerShell:
@@ -94,11 +100,37 @@ Start the development server:
 ```
 
 Open http://127.0.0.1:8000/accounts/signup/ to register. Successful registration
-returns to the home page with a success message. Login is a later increment.
+redirects to login with a success message.
 Try missing required fields, invalid email, mismatched/weak passwords, and
 registering the same email again with different capitalization.
 
-## Verify increment 2
+## Verify increment 3
+
+No new packages or database migrations are needed if increment 2's migrations
+have already been applied.
+
+1. Register a Member at `/accounts/signup/`.
+2. Log in at `/accounts/login/`; the Member dashboard is `/dashboard/member/`.
+3. As a Member, request `/dashboard/admin/` directly; access must be denied.
+4. Click Logout, then request `/dashboard/member/` again; it must send you to login.
+5. Create an Administrator from the terminal if you do not already have one:
+
+   ```powershell
+   .\.venv\Scripts\python.exe manage.py createsuperuser
+   ```
+
+   Enter an email, full name, and password at the prompts. Our custom manager
+   assigns the `ADMIN` role. This command creates an account; it does not enable
+   Django's built-in admin site, which remains unavailable at `/admin/`.
+
+6. Log in with that administrator account. It opens `/dashboard/admin/`, showing
+   account totals. Direct access to `/dashboard/member/` must be denied.
+
+The dashboard entry point `/dashboard/` routes either role to its own page.
+Login always uses that entry point; a submitted `next` URL cannot send a user
+to another role's dashboard or an external site.
+
+Run the account regression and permission tests:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py check
@@ -115,16 +147,16 @@ script for Supabase instead of plain `manage.py test`.
 ## GitHub workflow
 
 Repository: `https://github.com/dellisyoss/Homeward-Tolentino-PreciousAnn-G01`.
-Keep it public. The initial commit and setup PR are already on `main`.
-Increment 2 belongs on `feature/email-accounts`, as the original instructions
+Keep it public. The initial setup and email-registration PRs are on `main`.
+Increment 3 belongs on `feature/login-dashboards`, as the original instructions
 require subsequent updates through branches and pull requests.
 
 ```powershell
 git status
-git add accounts homeward/settings.py homeward/urls.py templates/base.html templates/registration/signup.html scripts/test_accounts.py README.md
+git add accounts/forms.py accounts/views.py accounts/urls.py accounts/tests.py homeward/settings.py homeward/urls.py templates/base.html templates/home.html templates/registration/signup.html templates/registration/login.html templates/dashboard templates/403.html README.md
 git diff --cached --stat
-git commit -m "Add email-based user model and registration"
-git push -u origin feature/email-accounts
+git commit -m "Add email login, logout, and protected role dashboards"
+git push -u origin feature/login-dashboards
 ```
 
 Review the staged files before committing. `.env`, `.venv/`, `venv/`, and
@@ -143,9 +175,8 @@ must be merged into `main`.
 
 ## Remaining increments
 
-1. Login/logout, protected Member/Admin dashboards, and permission checks.
-2. Own-profile viewing/editing and a custom administrator user management panel.
-3. Remaining account/permission tests, production settings, and Render deployment.
+1. Own-profile viewing/editing and a custom administrator user management panel.
+2. Remaining account/permission tests, production settings, and Render deployment.
 
 Each increment should be reviewed and committed before starting the next.
 Public registration creates Members only. The SDD's reference to an "admin site"
