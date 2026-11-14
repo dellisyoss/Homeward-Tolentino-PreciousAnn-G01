@@ -10,9 +10,24 @@
     <nav class="navbar bg-white border-bottom" aria-label="Main navigation">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">Homeward</a>
-            {% if not user.is_authenticated %}
-                <a class="btn btn-outline-primary btn-sm" href="{% url 'signup' %}">Register</a>
-            {% endif %}
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                {% if user.is_authenticated %}
+                    {% if user.role == "ADMIN" %}
+                        <a href="{% url 'admin_dashboard' %}">Admin dashboard</a>
+                        <a href="{% url 'admin_dashboard' %}#account-summary">Account summary</a>
+                    {% elif user.role == "MEMBER" %}
+                        <a href="{% url 'member_dashboard' %}">Member dashboard</a>
+                        <a href="{% url 'member_dashboard' %}#member-account">My account</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                    </form>
+                {% else %}
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Register</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
     <main class="container py-5">
