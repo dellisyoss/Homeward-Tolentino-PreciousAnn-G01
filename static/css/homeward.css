@@ -1,0 +1,8 @@
+.errorlist {
+    color: #dc3545;
+    padding-left: 1.25rem;
+}
+
+form label {
+    margin-bottom: 0.25rem;
+}

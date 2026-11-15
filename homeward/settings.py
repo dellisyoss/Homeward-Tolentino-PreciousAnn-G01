@@ -36,6 +36,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -71,7 +72,10 @@ DATABASES = {
         "PASSWORD": required_env("DB_PASSWORD"),
         "HOST": required_env("DB_HOST"),
         "PORT": os.environ.get("DB_PORT", "5432"),
-        "OPTIONS": {"sslmode": os.environ.get("DB_SSLMODE", "require")},
+        "OPTIONS": {
+            "sslmode": os.environ.get("DB_SSLMODE", "require"),
+            "connect_timeout": 10,
+        },
         "CONN_MAX_AGE": 0,
     }
 }
@@ -95,5 +99,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Manila"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
