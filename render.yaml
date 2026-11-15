@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: homeward
+    runtime: python
+    plan: free
+    region: singapore
+    repo: https://github.com/dellisyoss/Homeward-Tolentino-PreciousAnn-G01
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: bash build.sh
+    startCommand: python -m gunicorn homeward.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --access-logfile - --error-logfile -
+    healthCheckPath: /health/
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: homeward.production
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ""
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DB_NAME
+        value: postgres
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_SSLMODE
+        value: require
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

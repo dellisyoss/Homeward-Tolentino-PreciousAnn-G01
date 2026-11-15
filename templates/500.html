@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Service error | Homeward{% endblock %}
+{% block content %}
+<h1 class="h3">Something went wrong</h1>
+<p>Please try again later.</p>
+<a href="{% url 'home' %}" class="btn btn-primary">Go to home</a>
+{% endblock %}

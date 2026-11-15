@@ -49,7 +49,7 @@ def main():
                 cursor.execute("SELECT current_schema()")
                 if cursor.fetchone()[0] != schema:
                     raise RuntimeError("Test schema isolation failed; stopped.")
-            labels = sys.argv[1:] or ["accounts"]
+            labels = sys.argv[1:] or ["accounts", "homeward"]
             failures = DiscoverRunner(verbosity=2, interactive=False, keepdb=True).run_tests(labels)
         finally:
             connections.close_all()

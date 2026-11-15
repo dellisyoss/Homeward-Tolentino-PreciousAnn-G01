@@ -4,7 +4,7 @@ Homeward: Lost Pet Alert & Street Sighting Tracker. Full-stack Django project
 for IM2 Project Development 1, adapted from the `campusconnect reference` beside
 this project, with simple Bootstrap templates and Supabase PostgreSQL.
 
-## Increment 4: profiles and custom user management
+## Increment 5: production settings and deployment preparation
 
 Implemented: project setup and public registration with a unique email, required
 full name, optional contact number, and matching validated passwords. Django
@@ -24,7 +24,7 @@ goes to the user's own dashboard. Logged-out users are redirected to login;
 authenticated users requesting the other role's dashboard receive HTTP 403.
 Logout is a CSRF-protected POST action. Navbar links match the user's role.
 
-Implemented in this increment: own-profile viewing and editing, plus a custom
+Previously implemented: own-profile viewing and editing, plus a custom
 administrator user-management panel. Profiles can update name, email, and contact
 number, while roles and authentication flags are excluded from profile forms.
 The panel lists/searches accounts, creates Members or Administrators with hashed
@@ -38,8 +38,12 @@ protected from panel edits; their owners can still update their own profiles.
 Panel-created administrators use the Homeward `ADMIN` role, with no Django
 superuser or staff privileges. The built-in Django admin remains disabled.
 
-Deployment and final production checks are still upcoming. This is not the
-completed submission.
+Production settings, HTTPS/secure cookies, static-file serving, friendly error
+pages, and a database health endpoint are now included. `render.yaml` defines a
+Render Free Python service deploying `main`, with Supabase remaining the database.
+The application code for the account phase is implemented; the hosted deployment
+is not yet verified. Follow [DEPLOYMENT.md](DEPLOYMENT.md) to finish publishing
+and check the actual live URL before submitting.
 
 Use Python 3.15 with Django 6.1.3, matching the reference environment.
 From this folder in PowerShell:
@@ -182,19 +186,19 @@ need permission to create a separate database. The schema name is printed so it
 can be identified if the process is forcibly stopped before cleanup. Use this
 script for Supabase instead of plain `manage.py test`.
 
-## GitHub workflow
+## GitHub workflow for the final increment
 
 Repository: `https://github.com/dellisyoss/Homeward-Tolentino-PreciousAnn-G01`.
-Keep it public. The setup, registration, and login/dashboard PRs are on `main`.
-Increment 4 belongs on `feature/profiles-user-management`, as the original instructions
+Keep it public. The previous four increments are merged into `main`.
+Increment 5 belongs on `feature/production-deployment`, as the original instructions
 require subsequent updates through branches and pull requests.
 
 ```powershell
 git status
-git add accounts/forms.py accounts/views.py accounts/urls.py accounts/tests.py templates/base.html templates/dashboard templates/accounts templates/includes scripts/test_accounts.py README.md
+git add .env.example .gitattributes .python-version requirements.txt build.sh render.yaml homeward/settings.py homeward/production.py homeward/urls.py homeward/views.py homeward/tests.py templates/base.html templates/404.html templates/500.html static scripts/test_accounts.py scripts/check_production.py README.md DEPLOYMENT.md
 git diff --cached --stat
-git commit -m "Add own profiles and custom administrator user management"
-git push -u origin feature/profiles-user-management
+git commit -m "Prepare production settings and Render deployment"
+git push -u origin feature/production-deployment
 ```
 
 Review the staged files before committing. `.env`, `.venv/`, `venv/`, and
@@ -211,9 +215,11 @@ Repeat with a new branch and pull request for each following increment. Keep
 real progress commits; do not manufacture or backdate history. The final version
 must be merged into `main`.
 
-## Remaining increments
+## Remaining submission steps
 
-1. Final account/permission checks, production settings, and Render deployment.
+1. Review/commit this increment and merge its pull request into `main`.
+2. Deploy the merged `main` on Render using [DEPLOYMENT.md](DEPLOYMENT.md).
+3. Verify the hosted account flows and keep the actual public URL for submission.
 
 Each increment should be reviewed and committed before starting the next.
 Public registration creates Members only. The SDD's reference to an "admin site"
@@ -223,11 +229,15 @@ remain outside this account phase; a shelter directory is excluded by the SDD.
 
 ## Deployment target
 
-The proposed host is **Render**, with Supabase remaining the database. Blender
-is a 3D application. Deployment configuration will be added after the account
-features so that the final merged `main` can be deployed and verified.
-You will need GitHub, Supabase, and Render accounts; keep credentials in `.env`
-locally and the host's environment-variable settings in production.
+The configured host is **Render**, with Supabase remaining the database. The
+production settings module is `homeward.production`. Local development continues
+to use `homeward.settings`. WhiteNoise serves the collected static assets, and
+Gunicorn runs Django on Render. No SQLite database is configured.
+
+You need GitHub, Supabase, and Render accounts. Keep credentials in `.env` locally
+and Render's environment-variable settings in production. The GitHub repository
+root is the local `Homeward/homeward` folder, so leave Render's Root Directory
+blank. See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete numbered setup steps.
 
 References: [Supabase database connections](https://supabase.com/docs/guides/database/connecting-to-postgres),
 [Supabase Data API settings](https://supabase.com/docs/guides/api/securing-your-api),
