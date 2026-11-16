@@ -3,15 +3,58 @@
 {% block title %}Member dashboard | Homeward{% endblock %}
 
 {% block content %}
-<h1 class="h3">Member dashboard</h1>
-<p>Welcome, {{ user.full_name }}.</p>
-<section id="member-account" class="card card-body">
-    <h2 class="h5">Your member account</h2>
-    <dl class="mb-0">
-        <dt>Email</dt><dd>{{ user.email }}</dd>
-        <dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd>
-        <dt>Role</dt><dd>{{ user.get_role_display }}</dd>
-    </dl>
-</section>
-<a class="btn btn-primary mt-3" href="{% url 'profile' %}">View my profile</a>
+<header class="dashboard-header">
+    <div>
+        <p class="eyebrow">A community that cares</p>
+        <h1>Member dashboard</h1>
+        <p class="page-description">Welcome, {{ user.full_name }}. Let's help more pets find their way home.</p>
+    </div>
+    <span class="header-symbol" aria-hidden="true">{% include "includes/icon.html" with icon="paw" %}</span>
+</header>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="section-heading">
+            <div>
+                <h2>Your community</h2>
+                <p>Small acts of care. A better chance of finding home.</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <section class="card card-body feature-card h-100">
+                    <span class="icon-tile">{% include "includes/icon.html" with icon="paw" %}</span>
+                    <h3 class="card-title">Lost pet alerts</h3>
+                    <p>A place to report a missing pet and follow their journey home.</p>
+                    <span class="status-badge">Coming soon</span>
+                </section>
+            </div>
+            <div class="col-md-6">
+                <section class="card card-body feature-card h-100">
+                    <span class="icon-tile icon-tile--peach">{% include "includes/icon.html" with icon="pin" %}</span>
+                    <h3 class="card-title">Neighborhood sightings</h3>
+                    <p>Spotted a wandering pet? Share a sighting with your community.</p>
+                    <span class="status-badge">Coming soon</span>
+                </section>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <section id="member-account" class="card card-body account-card">
+            <h2 class="card-title">Your member account</h2>
+            <div class="account-identity">
+                <span class="account-avatar" aria-hidden="true">{{ user.full_name|first|upper }}</span>
+                <div>
+                    <p class="account-name">{{ user.full_name }}</p>
+                    <p class="account-role">{{ user.get_role_display }}</p>
+                </div>
+            </div>
+            <dl class="detail-list">
+                <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+                <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
+            </dl>
+            <a class="btn btn-outline-primary" href="{% url 'profile' %}">View my profile <span aria-hidden="true">&rarr;</span></a>
+        </section>
+    </div>
+</div>
 {% endblock %}

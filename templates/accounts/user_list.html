@@ -3,44 +3,52 @@
 {% block title %}Manage users | Homeward{% endblock %}
 
 {% block content %}
-<h1 class="h3">Manage users</h1>
-<a class="btn btn-primary mb-3" href="{% url 'user_create' %}">Create user</a>
-<form method="get" class="d-flex flex-wrap gap-2 mb-3">
-    <label for="user-search" class="visually-hidden">Search by name or email</label>
-    <input id="user-search" type="search" name="q" maxlength="100" value="{{ search }}" class="form-control w-auto" placeholder="Name or email">
-    <button type="submit" class="btn btn-outline-primary">Search</button>
-    {% if search %}<a href="{% url 'user_list' %}" class="btn btn-outline-secondary">Clear</a>{% endif %}
-</form>
-<div class="table-responsive">
-    <table class="table table-bordered bg-white">
-        <thead>
-            <tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Action</th></tr>
-        </thead>
-        <tbody>
-            {% for account in accounts %}
-                <tr>
-                    <td>{{ account.full_name }}</td>
-                    <td>{{ account.email }}</td>
-                    <td>{{ account.get_role_display }}</td>
-                    <td>{{ account.is_active|yesno:"Active,Inactive" }}</td>
-                    <td>
-                        {% if account.pk == user.pk %}
-                            <a href="{% url 'profile' %}">My profile</a>
-                        {% elif account.is_superuser %}
-                            Protected administrator
-                        {% else %}
-                            <a href="{% url 'user_edit' account.pk %}">Edit</a>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="5">No accounts found.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<header class="page-heading">
+    <div>
+        <p class="eyebrow">Your Homeward community</p>
+        <h1>Manage users</h1>
+        <p class="page-description">Find members and keep account details in order.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'user_create' %}">Create user <span aria-hidden="true">+</span></a>
+</header>
+<section class="card table-panel" aria-label="Community accounts">
+    <form method="get" class="table-toolbar" role="search">
+        <label for="user-search" class="visually-hidden">Search by name or email</label>
+        <input id="user-search" type="search" name="q" maxlength="100" value="{{ search }}" class="form-control" placeholder="Search by name or email">
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        {% if search %}<a href="{% url 'user_list' %}" class="btn btn-outline-secondary">Clear</a>{% endif %}
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Action</th></tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                    <tr>
+                        <td>{{ account.full_name }}</td>
+                        <td>{{ account.email }}</td>
+                        <td>{{ account.get_role_display }}</td>
+                        <td>{{ account.is_active|yesno:"Active,Inactive" }}</td>
+                        <td>
+                            {% if account.pk == user.pk %}
+                                <a href="{% url 'profile' %}">My profile</a>
+                            {% elif account.is_superuser %}
+                                Protected administrator
+                            {% else %}
+                                <a href="{% url 'user_edit' account.pk %}">Edit</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No accounts found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% if is_paginated %}
-    <nav aria-label="User list pages" class="d-flex gap-3 align-items-center">
+    <nav aria-label="User list pages" class="d-flex gap-3 align-items-center mt-4">
         {% if page_obj.has_previous %}
             <a href="?q={{ search|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
         {% endif %}
