@@ -3,15 +3,26 @@
 {% block title %}My profile | Homeward{% endblock %}
 
 {% block content %}
-<h1 class="h3">My profile</h1>
-<div class="card card-body">
-    <dl class="mb-0">
-        <dt>Full name</dt><dd>{{ user.full_name }}</dd>
-        <dt>Email</dt><dd>{{ user.email }}</dd>
-        <dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd>
-        <dt>Role</dt><dd>{{ user.get_role_display }}</dd>
-        <dt>Joined</dt><dd>{{ user.date_joined|date:"F j, Y" }}</dd>
-    </dl>
+<div class="form-panel">
+    <header class="page-heading">
+        <p class="eyebrow">Your place in the community</p>
+        <h1>My profile</h1>
+        <p class="page-description">The details that help us stay connected.</p>
+    </header>
+    <section class="card card-body" aria-label="Your profile details">
+        <div class="account-identity">
+            <span class="account-avatar" aria-hidden="true">{{ user.full_name|first|upper }}</span>
+            <div>
+                <h2 class="account-name">{{ user.full_name }}</h2>
+                <p class="account-role">{{ user.get_role_display }}</p>
+            </div>
+        </div>
+        <dl class="detail-list">
+            <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
+            <div><dt>Joined</dt><dd>{{ user.date_joined|date:"F j, Y" }}</dd></div>
+        </dl>
+        <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+    </section>
 </div>
-<a class="btn btn-primary mt-3" href="{% url 'profile_edit' %}">Edit profile</a>
 {% endblock %}

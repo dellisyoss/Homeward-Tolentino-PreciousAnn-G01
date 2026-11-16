@@ -3,15 +3,43 @@
 {% block title %}Administrator dashboard | Homeward{% endblock %}
 
 {% block content %}
-<h1 class="h3">Administrator dashboard</h1>
-<p>Welcome, {{ user.full_name }}.</p>
-<section id="account-summary" class="card card-body">
-    <h2 class="h5">Account summary</h2>
-    <dl class="mb-0">
-        <dt>Total accounts</dt><dd>{{ user_count }}</dd>
-        <dt>Members</dt><dd>{{ member_count }}</dd>
-        <dt>Administrators</dt><dd>{{ admin_count }}</dd>
+<header class="dashboard-header">
+    <div>
+        <p class="eyebrow">Community overview</p>
+        <h1>Administrator dashboard</h1>
+        <p class="page-description">Welcome, {{ user.full_name }}. Here's a look at your Homeward community.</p>
+    </div>
+    <span class="header-symbol" aria-hidden="true">{% include "includes/icon.html" with icon="users" %}</span>
+</header>
+
+<section id="account-summary" aria-labelledby="summary-title">
+    <div class="section-heading">
+        <div>
+            <h2 id="summary-title">Account summary</h2>
+            <p>A little perspective on the people behind Homeward.</p>
+        </div>
+    </div>
+    <dl class="summary-grid">
+        <div class="card card-body summary-card">
+            <dt><span class="icon-tile">{% include "includes/icon.html" with icon="users" %}</span>Total accounts</dt>
+            <dd>{{ user_count }}</dd>
+        </div>
+        <div class="card card-body summary-card summary-card--cream">
+            <dt><span class="icon-tile icon-tile--cream">{% include "includes/icon.html" with icon="paw" %}</span>Members</dt>
+            <dd>{{ member_count }}</dd>
+        </div>
+        <div class="card card-body summary-card summary-card--peach">
+            <dt><span class="icon-tile icon-tile--peach">{% include "includes/icon.html" with icon="profile" %}</span>Administrators</dt>
+            <dd>{{ admin_count }}</dd>
+        </div>
     </dl>
 </section>
-<a class="btn btn-primary mt-3" href="{% url 'user_list' %}">Manage users</a>
+
+<section class="card card-body action-panel" aria-labelledby="manage-title">
+    <div>
+        <h2 id="manage-title" class="card-title">Keep your community connected</h2>
+        <p class="mb-0 text-muted">Review member details, manage access, or welcome someone new.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'user_list' %}">Manage users <span aria-hidden="true">&rarr;</span></a>
+</section>
 {% endblock %}

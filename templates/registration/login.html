@@ -3,26 +3,28 @@
 {% block title %}Login | Homeward{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <h1 class="h3 mb-3">Login</h1>
-        <form method="post" class="card card-body">
-            {% csrf_token %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endfor %}
-            {% for field in form %}
-                <div class="mb-3">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-        <p class="mt-3">New to Homeward? <a href="{% url 'signup' %}">Register</a></p>
-    </div>
+<div class="form-panel">
+    <header class="page-heading">
+        <p class="eyebrow">Welcome home</p>
+        <h1>Login</h1>
+        <p class="page-description">A caring community, one connection away.</p>
+    </header>
+    <form method="post" class="card card-body">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endfor %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    <p class="form-footer">New to Homeward? <a href="{% url 'signup' %}">Register</a></p>
 </div>
 {% endblock %}
