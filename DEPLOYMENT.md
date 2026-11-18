@@ -129,3 +129,21 @@ References: [Render Django deployment](https://render.com/docs/deploy-django),
 [Render environment variables](https://render.com/docs/environment-variables),
 [Free service behavior](https://render.com/docs/free),
 [Django deployment checklist](https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/).
+
+## Password reset (PD2)
+
+Local development prints password reset emails in the runserver terminal. Click
+**Forgot your password?**, enter an active account's email, and use the link
+printed in the terminal.
+
+To enable real delivery on Render:
+
+1. Add and verify a sending domain in [Resend](https://resend.com/docs/dashboard/domains/introduction).
+2. In the Render service's environment settings, set `RESEND_API_KEY` to a
+   Resend sending key and `PASSWORD_RESET_FROM_EMAIL` to an address on that
+   verified domain. Save and redeploy. Keep the API key out of Git.
+3. Request a reset for a demo account whose inbox you control, open the email
+   link, change the password, and verify you can log in with the new password.
+
+The reset link is shown on the deployed login page when both variables are
+configured. Render Free can reach the email API over HTTPS.

@@ -42,3 +42,17 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Render Free blocks common SMTP ports. Send reset messages through HTTPS.
+resend_api_key = os.environ.get("RESEND_API_KEY", "").strip()
+reset_from_email = os.environ.get("PASSWORD_RESET_FROM_EMAIL", "").strip()
+PASSWORD_RESET_ENABLED = bool(resend_api_key and reset_from_email)
+if reset_from_email:
+    DEFAULT_FROM_EMAIL = reset_from_email
+
+MAILERS = {
+    "default": {
+        "BACKEND": "accounts.mail.ResendBackend",
+        "OPTIONS": {"api_key": resend_api_key},
+    },
+}
