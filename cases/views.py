@@ -3,32 +3,70 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods, require_safe
+from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_safe, require_http_methods
 
 from accounts.models import User
 from .forms import CaseForm, ZoneForm
 from .models import ACTIVE_STATUSES, CaseStatusHistory, LostPetCase, Zone
 
 
+def visible_cases(user):
+    if user.role == User.Role.ADMIN:
+        return LostPetCase.objects.all()
+    return LostPetCase.objects.filter(Q(owner=user) | Q(status__in=ACTIVE_STATUSES))
+
+
+def can_manage(user, case):
+    return user.role == User.Role.ADMIN or case.owner_id == user.pk
+
+
+def editable_case(user, pk, lock=False):
+    cases = LostPetCase.objects.all()
+    if user.role != User.Role.ADMIN:
+        cases = cases.filter(owner=user)
+    if lock:
+        cases = cases.select_for_update()
+    return get_object_or_404(cases, pk=pk)
+
+
 @login_required
 @require_safe
 def case_list(request):
     is_admin = request.user.role == User.Role.ADMIN
+    show_mine = request.GET.get("view") == "mine" and not is_admin
     cases = LostPetCase.objects.select_related("zone").defer("photo_data")
-    if not is_admin:
+    if show_mine:
+        cases = cases.filter(owner=request.user)
+    elif not is_admin:
         cases = cases.filter(status__in=ACTIVE_STATUSES)
-    return render(request, "cases/list.html", {"cases": cases, "is_admin": is_admin})
+    return render(request, "cases/list.html", {
+        "cases": cases, "is_admin": is_admin, "show_mine": show_mine,
+    })
 
 
 @login_required
 @require_safe
 def case_detail(request, pk):
-    cases = LostPetCase.objects.select_related("zone").defer("photo_data")
-    if request.user.role != User.Role.ADMIN:
-        cases = cases.filter(Q(owner=request.user) | Q(status__in=ACTIVE_STATUSES))
-    case = get_object_or_404(cases, pk=pk)
-    return render(request, "cases/detail.html", {"case": case})
+    case = get_object_or_404(visible_cases(request.user).select_related("zone"), pk=pk)
+    can_edit = can_manage(request.user, case)
+    history = case.status_history.select_related("changed_by") if can_edit else ()
+    return render(request, "cases/detail.html", {
+        "case": case, "can_edit": can_edit, "history": history,
+    })
+
+
+@never_cache
+@login_required
+@require_safe
+def case_photo(request, pk):
+    case = get_object_or_404(visible_cases(request.user).only("photo_data"), pk=pk)
+    if not case.photo_data:
+        raise Http404
+    return HttpResponse(bytes(case.photo_data), content_type="image/jpeg")
 
 
 @login_required
@@ -36,20 +74,53 @@ def case_detail(request, pk):
 def case_create(request):
     if request.user.role != User.Role.MEMBER:
         raise PermissionDenied
-
-    form = CaseForm(request.POST if request.method == "POST" else None)
+    form = CaseForm(request.POST, request.FILES) if request.method == "POST" else CaseForm()
     if request.method == "POST" and form.is_valid():
         with transaction.atomic():
             case = form.save(commit=False)
             case.owner = request.user
             case.save()
-            CaseStatusHistory.objects.create(
-                case=case, new_status=case.status, changed_by=request.user,
-            )
+            CaseStatusHistory.objects.create(case=case, new_status=case.status, changed_by=request.user)
         messages.success(request, "Lost-pet case created.")
         return redirect("cases:detail", pk=case.pk)
+    return render(request, "cases/form.html", {"form": form})
 
-    return render(request, "cases/form.html", {"form": form, "has_zones": Zone.objects.exists()})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def case_update(request, pk):
+    if request.method == "POST":
+        with transaction.atomic():
+            case = editable_case(request.user, pk, lock=True)
+            old_status = case.status
+            form = CaseForm(request.POST, request.FILES, instance=case)
+            if form.is_valid():
+                case = form.save()
+                if case.status != old_status:
+                    CaseStatusHistory.objects.create(
+                        case=case, old_status=old_status, new_status=case.status, changed_by=request.user,
+                    )
+                messages.success(request, "Lost-pet case updated.")
+                return redirect("cases:detail", pk=case.pk)
+    else:
+        case = editable_case(request.user, pk)
+        form = CaseForm(instance=case)
+    return render(request, "cases/form.html", {"form": form, "case": case})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def case_delete(request, pk):
+    if request.method == "POST":
+        with transaction.atomic():
+            case = editable_case(request.user, pk, lock=True)
+            case.delete()
+        messages.success(request, "Lost-pet case deleted.")
+        if request.user.role == User.Role.ADMIN:
+            return redirect("cases:list")
+        return redirect(reverse("cases:list", query={"view": "mine"}))
+    case = editable_case(request.user, pk)
+    return render(request, "cases/delete.html", {"case": case})
 
 
 @login_required
