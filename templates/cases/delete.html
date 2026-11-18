@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Delete case | Homeward{% endblock %}
+{% block content %}
+<div class="form-panel">
+    <header class="page-heading"><h1>Delete {{ case.pet_name }}’s case?</h1></header>
+    <form method="post" class="card card-body">
+        {% csrf_token %}
+        <p>This permanently deletes the case, including its photo and status history.</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-danger" type="submit">Delete case</button>
+            <a class="btn btn-outline-primary" href="{% url 'cases:detail' case.pk %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -7,6 +7,7 @@ from .views import health
 urlpatterns = [
     path("health/", health, name="health"),
     path("accounts/", include("accounts.urls")),
+    path("cases/", include("cases.urls")),
     path("dashboard/", dashboard_redirect, name="dashboard"),
     path("dashboard/member/", MemberDashboardView.as_view(), name="member_dashboard"),
     path("dashboard/admin/", AdminDashboardView.as_view(), name="admin_dashboard"),

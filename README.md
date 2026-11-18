@@ -242,3 +242,29 @@ blank. See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete numbered setup steps.
 References: [Supabase database connections](https://supabase.com/docs/guides/database/connecting-to-postgres),
 [Supabase Data API settings](https://supabase.com/docs/guides/api/securing-your-api),
 [Render Django deployment](https://render.com/docs/deploy-django).
+
+## Project Development 2 · Lost-pet case management (F-02)
+
+With your Supabase database credentials in `.env`, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver 8001
+```
+
+1. As an Administrator, open **Manage zones** and add a zone.
+2. As a Member, open **Report a lost pet**. Enter the pet's details, the time
+   lost in Philippine time, and the last-known location. Choose a zone and
+   save. One JPEG, PNG, or WebP photo is optional (up to 2 MB and 12 megapixels).
+3. Open **Browse active cases** to view Lost or Stale cases. Choose **My cases**
+   to see your own cases at any status.
+4. From a case you own, choose **Edit case** to correct details, change its
+   status, or replace or remove its photo. Choose **Delete case** and confirm
+   to permanently remove it. Administrators can edit and delete any case.
+
+Django saves cases, zones, and status history in Supabase PostgreSQL. Each
+new case starts as Lost. Status history records who changed the status and
+when, and a Closed case cannot be reopened. Homeward stores resized JPEGs in
+PostgreSQL in place of the SDD's photo URL, so photos survive Render restarts
+and follow the same viewing permissions as the case.

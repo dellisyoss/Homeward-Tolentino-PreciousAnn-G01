@@ -26,7 +26,11 @@
                     <span class="icon-tile">{% include "includes/icon.html" with icon="paw" %}</span>
                     <h3 class="card-title">Lost pet alerts</h3>
                     <p>A place to report a missing pet and follow their journey home.</p>
-                    <span class="status-badge">Coming soon</span>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-primary" href="{% url 'cases:list' %}">Browse active cases</a>
+                        <a class="btn btn-outline-primary" href="{% url 'cases:create' %}">Report a lost pet</a>
+                        <a class="btn btn-outline-primary" href="{% url 'cases:list' %}?view=mine">My cases</a>
+                    </div>
                 </section>
             </div>
             <div class="col-md-6">
