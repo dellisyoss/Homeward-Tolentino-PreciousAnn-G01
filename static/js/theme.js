@@ -18,8 +18,6 @@
         if (!toggle) return;
 
         const nextTheme = root.dataset.bsTheme === "dark" ? "light" : "dark";
-        const label = nextTheme === "dark" ? "Dark mode" : "Light mode";
-        toggle.querySelector("[data-theme-label]").textContent = label;
         toggle.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
         toggle.hidden = false;
     }

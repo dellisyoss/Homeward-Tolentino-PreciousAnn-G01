@@ -104,3 +104,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Local password reset messages appear in the runserver terminal.
+PASSWORD_RESET_ENABLED = True
+MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}

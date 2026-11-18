@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -51,6 +52,11 @@ class EmailLoginView(LoginView):
     authentication_form = EmailAuthenticationForm
     template_name = "registration/login.html"
     redirect_authenticated_user = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["password_reset_enabled"] = settings.PASSWORD_RESET_ENABLED
+        return context
 
     def get_success_url(self):
         # Every login lands on the user's own role dashboard, regardless of next.
