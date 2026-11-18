@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Lost-pet cases | Homeward{% endblock %}
+{% block content %}
+<header class="dashboard-header">
+    <div>
+        <h1>{% if is_admin %}Manage lost-pet cases{% elif show_mine %}My lost-pet cases{% else %}Active lost-pet cases{% endif %}</h1>
+    </div>
+    {% if not is_admin %}<a class="btn btn-primary" href="{% url 'cases:create' %}">Report a lost pet</a>{% endif %}
+</header>
+{% if is_admin %}
+    <a class="btn btn-outline-primary mb-4" href="{% url 'cases:zones' %}">Manage zones</a>
+{% else %}
+    <nav class="mb-4 d-flex gap-2" aria-label="Case lists">
+        <a class="btn btn-outline-primary" href="{% url 'cases:list' %}" {% if not show_mine %}aria-current="page"{% endif %}>Active cases</a>
+        <a class="btn btn-outline-primary" href="{% url 'cases:list' %}?view=mine" {% if show_mine %}aria-current="page"{% endif %}>My cases</a>
+    </nav>
+{% endif %}
+<div class="row g-3">
+    {% for case in cases %}
+        <div class="col-md-6 col-lg-4">
+            <article class="card card-body h-100">
+                <h2 class="h5"><a href="{% url 'cases:detail' case.pk %}">{{ case.pet_name }}</a></h2>
+                <p class="mb-1">{{ case.get_species_display }} · {{ case.get_status_display }}</p>
+                <p class="mb-1 text-break">{{ case.last_known_location }}, {{ case.zone }}</p>
+                <p class="mb-0 text-muted">{{ case.lost_at|date:"M j, Y, g:i A" }}</p>
+            </article>
+        </div>
+    {% empty %}
+        <p>{% if show_mine %}You haven’t reported a lost pet yet.{% elif is_admin %}No lost-pet cases have been reported.{% else %}There are no active cases.{% endif %}</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{% if case %}Edit case{% else %}Report a lost pet{% endif %} | Homeward{% endblock %}
+{% block content %}
+<div class="form-panel">
+    <header class="page-heading">
+        <h1>{% if case %}Edit case{% else %}Report a lost pet{% endif %}</h1>
+    </header>
+    {% if not form.has_zones %}
+        <p class="alert alert-info">Ask an administrator to add a zone before reporting a lost pet.</p>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="card card-body">
+        {% csrf_token %}
+        {% include "includes/form_fields.html" %}
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit" {% if not form.has_zones %}disabled{% endif %}>Save case</button>
+            <a class="btn btn-outline-primary" href="{% if case %}{% url 'cases:detail' case.pk %}{% else %}{% url 'cases:list' %}{% endif %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

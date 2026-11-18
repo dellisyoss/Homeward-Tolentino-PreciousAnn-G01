@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Manage zones | Homeward{% endblock %}
+{% block content %}
+<header class="page-heading">
+    <a href="{% url 'cases:list' %}">Manage lost-pet cases</a>
+    <h1>Manage zones</h1>
+</header>
+<div class="row g-4">
+    <div class="col-md-6">
+        <form method="post" class="card card-body">
+            <h2 class="h5">{% if zone %}Rename zone{% else %}Add zone{% endif %}</h2>
+            {% csrf_token %}
+            {% include "includes/form_fields.html" %}
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Save zone</button>
+                {% if zone %}<a class="btn btn-outline-primary" href="{% url 'cases:zones' %}">Cancel</a>{% endif %}
+            </div>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <section class="card card-body">
+            <h2 class="h5">Available zones</h2>
+            <ul class="mb-0">
+                {% for item in zones %}
+                    <li class="mb-2"><a href="{% url 'cases:zone_edit' item.pk %}">{{ item.zone_name }}</a></li>
+                {% empty %}
+                    <li>No zones added yet.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+</div>
+{% endblock %}

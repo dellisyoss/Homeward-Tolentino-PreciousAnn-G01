@@ -42,4 +42,11 @@
     </div>
     <a class="btn btn-primary" href="{% url 'user_list' %}">Manage users <span aria-hidden="true">&rarr;</span></a>
 </section>
+<section class="card card-body action-panel mt-4">
+    <h2 class="card-title">Lost-pet cases</h2>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" href="{% url 'cases:list' %}">Manage cases</a>
+        <a class="btn btn-outline-primary" href="{% url 'cases:zones' %}">Manage zones</a>
+    </div>
+</section>
 {% endblock %}
