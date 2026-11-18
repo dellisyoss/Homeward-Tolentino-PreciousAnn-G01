@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ case.pet_name }} | Homeward{% endblock %}
+
+{% block content %}
+<header class="page-heading">
+    <a href="{% url 'cases:list' %}">Lost-pet cases</a>
+    <h1>{{ case.pet_name }}</h1>
+    <p class="page-description">{{ case.get_species_display }} · {{ case.get_status_display }}</p>
+</header>
+<section class="card card-body col-md-8">
+    <h2 class="h5">Case details</h2>
+    <dl class="detail-list text-break">
+        <div><dt>Color</dt><dd>{{ case.color }}</dd></div>
+        {% if case.breed %}<div><dt>Breed</dt><dd>{{ case.breed }}</dd></div>{% endif %}
+        <div><dt>Date and time lost</dt><dd>{{ case.lost_at|date:"M j, Y, g:i A" }} (Philippine time)</dd></div>
+        <div><dt>Last-known location</dt><dd>{{ case.last_known_location }}</dd></div>
+        <div><dt>Zone</dt><dd>{{ case.zone }}</dd></div>
+        {% if case.description %}<div><dt>Identifying details</dt><dd>{{ case.description|linebreaksbr }}</dd></div>{% endif %}
+    </dl>
+</section>
+{% endblock %}
