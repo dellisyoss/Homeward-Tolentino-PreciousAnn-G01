@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.db import OperationalError
-from django.test import SimpleTestCase, override_settings
+from django.test import Client, SimpleTestCase, override_settings
 from django.urls import reverse
 
 
@@ -26,9 +26,25 @@ class HealthTests(SimpleTestCase):
     def test_health_does_not_accept_post(self):
         self.assertEqual(self.client.post(reverse("health")).status_code, 405)
 
-    @override_settings(DEBUG=False)
+
+@override_settings(DEBUG=False)
+class ErrorPageTests(SimpleTestCase):
     def test_missing_page_uses_friendly_template(self):
         response = self.client.get("/missing-page/")
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, "404.html")
         self.assertNotContains(response, "URLconf", status_code=404)
+
+    @patch(
+        "django.templatetags.static.StaticNode.handle_simple",
+        side_effect=RuntimeError("private static file failure"),
+    )
+    def test_server_error_page_renders_when_static_file_resolution_fails(self, static_url):
+        client = Client(raise_request_exception=False)
+        with self.assertLogs("django.request", level="ERROR"):
+            response = client.get(reverse("home"))
+
+        static_url.assert_called_once()
+        self.assertTemplateUsed(response, "500.html")
+        self.assertContains(response, "Something went wrong", status_code=500)
+        self.assertNotContains(response, "private static file failure", status_code=500)
