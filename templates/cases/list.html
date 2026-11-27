@@ -19,7 +19,13 @@
     {% for case in cases %}
         <div class="col-md-6 col-lg-4">
             <article class="card card-body h-100">
-                <h2 class="h5"><a href="{% url 'cases:detail' case.pk %}">{{ case.pet_name }}</a></h2>
+                <h2 class="h5">
+                    {% if is_admin or case.owner_id == user.pk %}
+                        <a href="{% url 'cases:detail' case.pk %}">{{ case.pet_name }}</a>
+                    {% else %}
+                        {{ case.pet_name }}
+                    {% endif %}
+                </h2>
                 <p class="mb-1">{{ case.get_species_display }} · {{ case.get_status_display }}</p>
                 <p class="mb-1 text-break">{{ case.last_known_location }}, {{ case.zone }}</p>
                 <p class="mb-0 text-muted">{{ case.lost_at|date:"M j, Y, g:i A" }}</p>
