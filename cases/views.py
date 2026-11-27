@@ -9,8 +9,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe, require_http_methods
 
 from accounts.models import User
-from .forms import CaseForm, ZoneForm
-from .models import ACTIVE_STATUSES, CaseStatusHistory, LostPetCase, Zone
+from .forms import CaseCreateForm, CaseForm, ZoneForm
+from .models import ACTIVE_STATUSES, CASE_SUBMISSION_CONSTRAINT, CaseStatusHistory, LostPetCase, Zone
 
 
 def manageable_cases(user):
@@ -38,7 +38,7 @@ def case_list(request):
     cases = manageable_cases(request.user)
     if not is_admin and not show_mine:
         cases = LostPetCase.objects.filter(status__in=ACTIVE_STATUSES)
-    cases = cases.select_related("zone").defer("photo_data")
+    cases = cases.select_related("zone").defer("photo_data", "submission_key")
     return render(request, "cases/list.html", {
         "cases": cases, "is_admin": is_admin, "show_mine": show_mine,
     })
@@ -71,14 +71,26 @@ def case_photo(request, pk):
 def case_create(request):
     if request.user.role != User.Role.MEMBER:
         raise PermissionDenied
-    form = CaseForm(request.POST, request.FILES) if request.method == "POST" else CaseForm()
+    form = CaseCreateForm(request.POST, request.FILES) if request.method == "POST" else CaseCreateForm()
     if request.method == "POST" and form.is_valid():
-        with transaction.atomic():
-            case = form.save(commit=False)
-            case.owner = request.user
-            case.save()
-            CaseStatusHistory.objects.create(case=case, new_status=case.status, changed_by=request.user)
-        messages.success(request, "Lost-pet case created.")
+        case = form.save(commit=False)
+        case.owner = request.user
+        case.submission_key = form.cleaned_data["submission_key"]
+        try:
+            with transaction.atomic():
+                case.save()
+                CaseStatusHistory.objects.create(case=case, new_status=case.status, changed_by=request.user)
+        except IntegrityError as error:
+            details = getattr(error.__cause__, "diag", None)
+            if getattr(details, "constraint_name", None) != CASE_SUBMISSION_CONSTRAINT:
+                raise
+            case = get_object_or_404(
+                manageable_cases(request.user).only("pk"),
+                submission_key=case.submission_key,
+            )
+            messages.info(request, "This case was already submitted.")
+        else:
+            messages.success(request, "Lost-pet case created.")
         return redirect("cases:detail", pk=case.pk)
     return render(request, "cases/form.html", {"form": form})
 
