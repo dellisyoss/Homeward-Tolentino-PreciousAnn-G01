@@ -4,46 +4,34 @@
 
 {% block content %}
 <header class="dashboard-header">
-    <div>
-        <p class="eyebrow">Community overview</p>
-        <h1>Administrator dashboard</h1>
-        <p class="page-description">Welcome, {{ user.full_name }}. Here's a look at your Homeward community.</p>
-    </div>
-    <span class="header-symbol" aria-hidden="true">{% include "includes/icon.html" with icon="users" %}</span>
+    <h1>Administrator dashboard</h1>
+    <p class="page-description">Welcome, {{ user.full_name }}.</p>
 </header>
 
 <section id="account-summary" aria-labelledby="summary-title">
-    <div class="section-heading">
-        <div>
-            <h2 id="summary-title">Account summary</h2>
-            <p>A little perspective on the people behind Homeward.</p>
-        </div>
-    </div>
+    <h2 id="summary-title" class="mb-3">Account summary</h2>
     <dl class="summary-grid">
         <div class="card card-body summary-card">
-            <dt><span class="icon-tile">{% include "includes/icon.html" with icon="users" %}</span>Total accounts</dt>
+            <dt>Total accounts</dt>
             <dd>{{ user_count }}</dd>
         </div>
-        <div class="card card-body summary-card summary-card--cream">
-            <dt><span class="icon-tile icon-tile--cream">{% include "includes/icon.html" with icon="paw" %}</span>Members</dt>
+        <div class="card card-body summary-card">
+            <dt>Members</dt>
             <dd>{{ member_count }}</dd>
         </div>
-        <div class="card card-body summary-card summary-card--peach">
-            <dt><span class="icon-tile icon-tile--peach">{% include "includes/icon.html" with icon="profile" %}</span>Administrators</dt>
+        <div class="card card-body summary-card">
+            <dt>Administrators</dt>
             <dd>{{ admin_count }}</dd>
         </div>
     </dl>
 </section>
 
 <section class="card card-body action-panel" aria-labelledby="manage-title">
-    <div>
-        <h2 id="manage-title" class="card-title">Keep your community connected</h2>
-        <p class="mb-0 text-muted">Review member details, manage access, or welcome someone new.</p>
-    </div>
-    <a class="btn btn-primary" href="{% url 'user_list' %}">Manage users <span aria-hidden="true">&rarr;</span></a>
+    <h2 id="manage-title" class="mb-0">User accounts</h2>
+    <a class="btn btn-primary" href="{% url 'user_list' %}">Manage users</a>
 </section>
 <section class="card card-body action-panel mt-4">
-    <h2 class="card-title">Lost-pet cases</h2>
+    <h2 class="mb-0">Lost-pet cases</h2>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-primary" href="{% url 'cases:list' %}">Manage cases</a>
         <a class="btn btn-outline-primary" href="{% url 'cases:zones' %}">Manage zones</a>
