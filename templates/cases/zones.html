@@ -10,7 +10,7 @@
         <form method="post" class="card card-body">
             <h2 class="h5">{% if zone %}Rename zone{% else %}Add zone{% endif %}</h2>
             {% csrf_token %}
-            {% include "includes/form_fields.html" %}
+            {% include "includes/form_fields.html" with error_summary="Correct the errors below to save the zone." %}
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" type="submit">Save zone</button>
                 {% if zone %}<a class="btn btn-outline-primary" href="{% url 'cases:zones' %}">Cancel</a>{% endif %}

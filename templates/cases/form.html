@@ -10,7 +10,7 @@
     {% endif %}
     <form method="post" enctype="multipart/form-data" class="card card-body">
         {% csrf_token %}
-        {% include "includes/form_fields.html" %}
+        {% include "includes/form_fields.html" with error_summary="Correct the errors below to save the case." %}
         <div class="d-flex gap-2">
             <button class="btn btn-primary" type="submit" {% if not form.has_zones %}disabled{% endif %}>Save case</button>
             <a class="btn btn-outline-primary" href="{% if case %}{% url 'cases:detail' case.pk %}{% else %}{% url 'cases:list' %}{% endif %}">Cancel</a>

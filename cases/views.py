@@ -136,9 +136,12 @@ def zone_manage(request, pk=None):
             with transaction.atomic():
                 form.save()
         except IntegrityError:
-            if not Zone.objects.filter(zone_name=form.cleaned_data["zone_name"]).exists():
+            duplicates = Zone.objects.filter(zone_name=form.cleaned_data["zone_name"]).exclude(
+                pk=form.instance.pk,
+            )
+            if not duplicates.exists():
                 raise
-            form.add_error("zone_name", "That zone name already exists.")
+            form.add_error("zone_name", form.fields["zone_name"].error_messages["unique"])
         else:
             messages.success(request, "Zone saved.")
             return redirect("cases:zones")

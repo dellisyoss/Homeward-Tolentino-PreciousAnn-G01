@@ -30,6 +30,12 @@ class CaseForm(forms.ModelForm):
             ),
         }
         help_texts = {"lost_at": "Use Philippine time (UTC+8)."}
+        error_messages = {
+            "species": {"invalid_choice": "Choose Dog, Cat, or Other."},
+            "lost_at": {"invalid": "Enter a valid date and time."},
+            "zone": {"required": "Choose a zone.", "invalid_choice": "Choose an available zone."},
+            "status": {"invalid_choice": "This case cannot change to that status."},
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,7 +76,9 @@ class CaseForm(forms.ModelForm):
                 output = BytesIO()
                 image.save(output, format="JPEG", quality=85)
                 return output.getvalue()
-        except (OSError, ValueError, Image.DecompressionBombError) as exc:
+        except Image.DecompressionBombError as exc:
+            raise forms.ValidationError("Choose a photo no larger than 12 megapixels.") from exc
+        except (OSError, SyntaxError, ValueError) as exc:
             raise forms.ValidationError("Choose a valid JPEG, PNG, or WebP photo.") from exc
 
     def clean(self):
@@ -94,6 +102,9 @@ class ZoneForm(forms.ModelForm):
     class Meta:
         model = Zone
         fields = ("zone_name",)
+        error_messages = {
+            "zone_name": {"required": "Enter a zone name.", "unique": "That zone name already exists."},
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
