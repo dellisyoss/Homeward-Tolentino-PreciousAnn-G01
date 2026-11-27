@@ -17,6 +17,7 @@ class Status(models.TextChoices):
 
 
 ACTIVE_STATUSES = (Status.LOST, Status.STALE)
+CASE_SUBMISSION_CONSTRAINT = "cases_owner_submission_key_unique"
 STATUS_TRANSITIONS = {
     Status.LOST: (Status.FOUND, Status.STALE, Status.CLOSED),
     Status.STALE: (Status.LOST, Status.FOUND, Status.CLOSED),
@@ -41,6 +42,7 @@ class LostPetCase(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="case_id")
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, models.PROTECT)
     zone = models.ForeignKey(Zone, models.PROTECT)
+    submission_key = models.UUIDField(null=True, blank=True, editable=False)
     pet_name = models.CharField(max_length=100)
     species = models.CharField(max_length=10, choices=Species.choices)
     breed = models.CharField(max_length=100, blank=True)
@@ -57,6 +59,11 @@ class LostPetCase(models.Model):
         db_table = "cases"
         ordering = ["-created_at", "-pk"]
         constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "submission_key"],
+                condition=models.Q(submission_key__isnull=False),
+                name=CASE_SUBMISSION_CONSTRAINT,
+            ),
             models.CheckConstraint(condition=models.Q(species__in=Species.values), name="cases_species_valid"),
             models.CheckConstraint(condition=models.Q(status__in=Status.values), name="cases_status_valid"),
             models.CheckConstraint(condition=models.Q(lost_at__lte=models.F("created_at")), name="cases_lost_at_before_creation"),

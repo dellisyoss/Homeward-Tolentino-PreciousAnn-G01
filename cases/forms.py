@@ -1,4 +1,5 @@
 from io import BytesIO
+from uuid import uuid4
 
 from django import forms
 from django.utils import timezone
@@ -96,6 +97,17 @@ class CaseForm(forms.ModelForm):
         if commit:
             case.save()
         return case
+
+
+class CaseCreateForm(CaseForm):
+    submission_key = forms.UUIDField(
+        initial=uuid4,
+        widget=forms.HiddenInput,
+        error_messages={
+            "required": "Reload the report form and try again.",
+            "invalid": "Reload the report form and try again.",
+        },
+    )
 
 
 class ZoneForm(forms.ModelForm):
