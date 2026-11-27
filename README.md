@@ -143,42 +143,45 @@ For a smoke test, use a test database or designated test accounts. Check
 registration, login, logout, profile editing, and both dashboards, then follow
 the PD2 case workflow above. An authorized maintainer can create an initial
 Administrator with `manage.py createsuperuser` when setting up an empty database.
-The account regression script uses a temporary schema in the configured database.
+
+## Run the automated tests
+
+The full Django suite covers the lost-pet case workflow, accounts, dashboards,
+profiles, and custom error pages. Use a local or dedicated test PostgreSQL
+instance with a login that can create databases. Django creates and removes its
+own test database using that connection.
+
+For local PostgreSQL on port 5432, open a separate PowerShell terminal in the
+folder containing `manage.py` and enter the local database credentials. These
+settings apply to the current terminal. Keep a `DJANGO_SECRET_KEY` in your local
+`.env` as described above.
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/test_accounts.py
+$homewardTestDatabase = Get-Credential -Message "Local PostgreSQL test login"
+$env:DB_HOST = "127.0.0.1"
+$env:DB_PORT = "5432"
+$env:DB_NAME = "postgres"
+$env:DB_USER = $homewardTestDatabase.UserName
+$env:DB_PASSWORD = $homewardTestDatabase.GetNetworkCredential().Password
+$env:DB_SSLMODE = "disable"
+$env:DJANGO_SETTINGS_MODULE = "homeward.settings"
+.\.venv\Scripts\python.exe manage.py test
 ```
 
-## Project Development 3 handoff
+Run only the lost-pet case tests with
+`.\.venv\Scripts\python.exe manage.py test cases` in the same terminal.
 
-Start from the PD2 baseline on `main`. Read the PD3 assignment and the approved
-SDD before choosing the next feature. Verify the existing account and case flows
-using the setup above.
+## Project Development 3 hardening
+
+PD3 hardens the existing case and account workflows. Case forms validate
+submissions on the server and display field errors. Full case records and
+photos are accessible to their owner and administrators. Repeated submissions
+from the same report form redirect to the original case.
 
 `main` is the stable deployment branch and `develop` is the integration branch.
-Fetch both before starting. If `git log` below lists commits, bring `main` into
-`develop` with a pull request so the feature branch includes the current baseline.
-
-```powershell
-git fetch origin
-git log --oneline origin/develop..origin/main
-```
-
-After `develop` includes the baseline, replace `your-feature-name` below with
-the assigned feature name. On a fresh clone, `git switch develop` creates a
-local tracking branch from `origin/develop`.
-
-```powershell
-git switch develop
-git pull --ff-only origin develop
-git switch -c feature/your-feature-name
-```
-
-Commit progress with clear messages and push the feature branch. Open a feature
-PR into `develop`, then open a `develop` PR into `main` once the increment is
-ready. Keep merged feature branches. The PD2 assignment specified a minimum of
-two feature branches, two merged PRs into `develop`, and one merged PR from
-`develop` into `main`. Use the PD3 brief for its submission requirements.
+Create `fix/`, `hardening/`, and `test/` work branches from `develop`. Merge
+work through pull requests into `develop`, then release through a reviewed
+`develop` pull request into `main`. Keep the merged branches.
 
 ## Render deployment
 
