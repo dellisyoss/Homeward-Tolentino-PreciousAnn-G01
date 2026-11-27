@@ -34,11 +34,12 @@ keys. Supabase stores the case, its optional photo, and its status history.
 2. As a Member, use **Report a lost pet**. Enter the pet details, the last-known
    location, and the time lost in Philippine time. The form rejects future dates
    and validates the optional JPEG, PNG, or WebP photo (up to 2 MB and 12 megapixels).
-3. Use **Browse active cases** to see Lost and Stale cases shared with signed-in
-   users. **My cases** shows your own reports at every status.
-4. Edit or delete a case you own. Administrators can view, edit, and delete any
-   case. Each new case starts as Lost. Status changes record who made the change
-   and when. Closed cases stay closed.
+3. Use **Browse active cases** to see summaries of Lost and Stale cases.
+   **My cases** shows your own reports at every status.
+4. Open a case you own to see its full details, photo, and status history, or
+   to edit or delete it. Administrators can access and manage any case. Each
+   new case starts as Lost. Status changes record who made the change and
+   when. Closed cases stay closed.
 
 PD2 also added password reset. Locally, **Forgot your password?** prints the
 reset email in the Django terminal. On Render, delivery uses Resend when
