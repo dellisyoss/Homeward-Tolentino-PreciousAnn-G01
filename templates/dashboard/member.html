@@ -4,28 +4,17 @@
 
 {% block content %}
 <header class="dashboard-header">
-    <div>
-        <p class="eyebrow">A community that cares</p>
-        <h1>Member dashboard</h1>
-        <p class="page-description">Welcome, {{ user.full_name }}. Let's help more pets find their way home.</p>
-    </div>
-    <span class="header-symbol" aria-hidden="true">{% include "includes/icon.html" with icon="paw" %}</span>
+    <h1>Member dashboard</h1>
+    <p class="page-description">Welcome, {{ user.full_name }}.</p>
 </header>
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="section-heading">
-            <div>
-                <h2>Your community</h2>
-                <p>Small acts of care. A better chance of finding home.</p>
-            </div>
-        </div>
         <div class="row g-4">
             <div class="col-md-6">
                 <section class="card card-body feature-card h-100">
                     <span class="icon-tile">{% include "includes/icon.html" with icon="paw" %}</span>
-                    <h3 class="card-title">Lost pet alerts</h3>
-                    <p>A place to report a missing pet and follow their journey home.</p>
+                    <h2 class="card-title">Lost pet alerts</h2>
                     <div class="d-flex flex-wrap gap-2">
                         <a class="btn btn-primary" href="{% url 'cases:list' %}">Browse active cases</a>
                         <a class="btn btn-outline-primary" href="{% url 'cases:create' %}">Report a lost pet</a>
@@ -35,10 +24,9 @@
             </div>
             <div class="col-md-6">
                 <section class="card card-body feature-card h-100">
-                    <span class="icon-tile icon-tile--peach">{% include "includes/icon.html" with icon="pin" %}</span>
-                    <h3 class="card-title">Neighborhood sightings</h3>
-                    <p>Spotted a wandering pet? Share a sighting with your community.</p>
-                    <span class="status-badge">Coming soon</span>
+                    <span class="icon-tile">{% include "includes/icon.html" with icon="pin" %}</span>
+                    <h2 class="card-title">Neighborhood sightings</h2>
+                    <p class="mb-0 text-muted">Coming soon</p>
                 </section>
             </div>
         </div>
@@ -57,7 +45,7 @@
                 <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
                 <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
             </dl>
-            <a class="btn btn-outline-primary" href="{% url 'profile' %}">View my profile <span aria-hidden="true">&rarr;</span></a>
+            <a class="btn btn-outline-primary" href="{% url 'profile' %}">View my profile</a>
         </section>
     </div>
 </div>
